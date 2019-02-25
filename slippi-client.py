@@ -10,10 +10,19 @@ from enum import Enum
 class SlippiClient: 
     """For getting real-time data from slippi-enabled Wiis"""
     def __init__(self, ip, slippiProcessor, gameDataProcessor, port=666):
+    	# connect to slippi
+        self.relay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.relay.bind(('localhost', 666))
+        self.relay.listen(1)
+        slippiReplayLauncher = self.relay.accept()
+        relaySocket = slippiReplayLauncher[0]
+        relayAddress = slippiReplayLauncher[1]
+        # connect to wii
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((ip, port))
         while True:
             data = self.sock.recv(4096)
+            relaySocket.sendall(data)
             slippiProcessor.handleData(data, gameDataProcessor)
 
 class GameDataProcessor:
