@@ -10,7 +10,7 @@ from enum import Enum
 class SlippiClient: 
     """For getting real-time data from slippi-enabled Wiis"""
     def __init__(self, ip, slippiProcessor, gameDataProcessor, port=666):
-    	# connect to slippi
+        # connect to slippi
         self.relay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.relay.bind(('localhost', 666))
         self.relay.listen(1)
@@ -19,15 +19,23 @@ class SlippiClient:
         relayAddress = slippiReplayLauncher[1]
         # connect to wii
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(0.1) # 100ms timeout
         self.sock.connect((ip, port))
         while True:
-            data = self.sock.recv(4096)
+            try:
+                data = self.sock.recv(4096)
+            except socket.timeout:
+                if gameDataProcessor.active:
+                    gameDataProcessor.active = False
+                    print("Game not active")
+                continue
             relaySocket.sendall(data)
             slippiProcessor.handleData(data, gameDataProcessor)
 
 class GameDataProcessor:
     def __init__(self):
         self.ready = False
+        self.active = False
         self.info = {}
 
     def newGame(self):
@@ -40,7 +48,7 @@ class GameDataProcessor:
             "characterColor": [0,0,0,0],
             "teamColor": [0,0,0,0],
             "randomSeed": 0x00000000,
-            "ended": 0x00
+            "ended": 0x00,
         }
 
     def newChar(self):
@@ -62,7 +70,20 @@ class GameDataProcessor:
             "joyY": 0.000,
             "cX": 0.000,
             "cY": 0.000,
-            "buttons": 0x00000000,
+            "buttons": {
+                "start": False,
+                "y": False,
+                "x": False,
+                "b": False,
+                "a": False,
+                "l": False,
+                "r": False,
+                "z": False,
+                "dU": False,
+                "dD": False,
+                "dL": False,
+                "dR": False
+            },
             "triggerL": 0.000,
             "triggerR": 0.000,
         }
@@ -106,7 +127,21 @@ class GameDataProcessor:
         player["joyY"] = struct.unpack('>f', data[0x1D:0x1D+4])[0]
         player["cX"] = struct.unpack('>f', data[0x21:0x21+4])[0]
         player["cY"] = struct.unpack('>f', data[0x25:0x25+4])[0]
-        player["buttons"] = struct.unpack('>H', data[0x31:0x31+2])[0]
+        buttons = data[0x31:0x31+2]
+        player["buttons"] = {
+            "start": ((data[0x31] >> 4 & 1) == 1),
+            "y":     ((data[0x31] >> 3 & 1) == 1),
+            "x":     ((data[0x31] >> 2 & 1) == 1),
+            "b":     ((data[0x31] >> 1 & 1) == 1),
+            "a":     ((data[0x31] >> 0 & 1) == 1),
+            "l":     ((data[0x32] >> 6 & 1) == 1),
+            "r":     ((data[0x32] >> 5 & 1) == 1),
+            "z":     ((data[0x32] >> 4 & 1) == 1),
+            "dU":    ((data[0x32] >> 3 & 1) == 1),
+            "dD":    ((data[0x32] >> 2 & 1) == 1),
+            "dL":    ((data[0x32] >> 1 & 1) == 1),
+            "dR":    ((data[0x32] >> 0 & 1) == 1)
+        }
         player["triggerL"] = struct.unpack('>f', data[0x33:0x33+4])[0]
         player["triggerR"] = struct.unpack('>f', data[0x37:0x37+4])[0]
 
@@ -128,7 +163,6 @@ class GameDataProcessor:
         player["stocks"] = data[0x21]
         player["actionStateFrameCounter"] = struct.unpack('>f', data[0x22:0x22+4])[0]
         self.ready = True # ok NOW you can get data
-        print(self.info)
 
     def gameEndProcess(self, data):
         g = self.info["gameData"]
@@ -212,11 +246,16 @@ class SlippiFileProcessor:
         data = self.info["previousBuffer"] + newData
         while (index < len(data)):
             if(data[:5] == b'HELO\x00'):
-                print("HELO")
                 index += 5
                 continue
 
             command = struct.unpack('B', data[index:index+1])[0]
+
+            if (not gdp.active) and (not (self.CMD(command) == self.CMD.GAME_END)):
+                gdp.active = True
+                print("Game active")
+            
+
             if command not in self.info["payloadSizes"]:
                 payloadSize = 0
             else:
