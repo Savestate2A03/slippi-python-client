@@ -66,6 +66,12 @@ class GameDataProcessor:
             self.newChar(),
             self.newChar()
         ]
+        self.info["followers"] = [
+            self.newChar(),
+            self.newChar(),
+            self.newChar(),
+            self.newChar()
+        ]
         g = self.info["gameData"]
         g["isTeams"] = True if (data[0x0D] == 1) else False 
         g["stage"] = struct.unpack('>H', data[0x13:0x13+2])[0]
@@ -79,7 +85,7 @@ class GameDataProcessor:
         print(g)
 
     def preFrameProcess(self, data):
-        chars = self.info["chars"]
+        chars = self.info["chars"] if (data[0x06] == 0) else self.info["followers"]
         playerIndex = data[0x05]
         player = chars[playerIndex] 
         player["isFollower"] = True if (data[0x06] == 1) else False
@@ -96,7 +102,7 @@ class GameDataProcessor:
         player["triggerR"] = struct.unpack('>f', data[0x37:0x37+4])[0]
 
     def postFrameProcess(self, data):
-        chars = self.info["chars"]
+        chars = self.info["chars"] if (data[0x06] == 0) else self.info["followers"]
         playerIndex = data[0x05]
         player = chars[playerIndex] 
         player["isFollower"] = True if (data[0x06] == 1) else False
