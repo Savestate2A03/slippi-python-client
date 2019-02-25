@@ -23,7 +23,7 @@ class SlippiClient:
         self.sock.connect((ip, port))
         while True:
             try:
-                data = self.sock.recv(4096)
+                data = self.sock.recv(65536)
             except socket.timeout:
                 if gameDataProcessor.active:
                     gameDataProcessor.active = False
