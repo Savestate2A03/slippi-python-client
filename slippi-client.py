@@ -255,7 +255,6 @@ class SlippiFileProcessor:
                 gdp.active = True
                 print("Game active")
             
-
             if command not in self.info["payloadSizes"]:
                 payloadSize = 0
             else:
