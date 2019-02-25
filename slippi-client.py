@@ -12,11 +12,9 @@ class SlippiClient:
     def __init__(self, ip, slippiProcessor, gameDataProcessor, port=666):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((ip, port))
-        i = 0
         while True:
             data = self.sock.recv(4096)
             slippiProcessor.handleData(data, gameDataProcessor)
-            i += 1
 
 class GameDataProcessor:
     def __init__(self):
@@ -33,7 +31,7 @@ class GameDataProcessor:
             "characterColor": [0,0,0,0],
             "teamColor": [0,0,0,0],
             "randomSeed": 0x00000000,
-            "ended": False
+            "ended": 0x00
         }
 
     def newChar(self):
