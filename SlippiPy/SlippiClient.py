@@ -21,7 +21,8 @@ class SlippiClient:
         relay = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         relay.bind(('0.0.0.0', 666))
         relay.listen(16) # max 16 clients for now ...
-        pub.subscribe(self.handleClients, 'Slippi-relayData')
+        pub.subscribe(self.handleClients, 'Slippi-RelayData')
+        pub.subscribe(self.configureNewClients, 'Slippi-NewFile')
 
         # helo generator
         _thread.start_new_thread(self.heloGenerator,())
@@ -49,17 +50,27 @@ class SlippiClient:
                     gdp.active = False
                     pub.sendMessage('Slippi-GameInactive')
                 continue
-            pub.sendMessage('Slippi-relayData', data=data)
             slp.handleData(data, gdp)
+            pub.sendMessage('Slippi-RelayData', data=data)
 
     def handleClients(self, data=None):
-        if data==None:
-            return
-        [self.sendClientData(client, data) for client in self.clients if client["sendData"]]
+        if data != None:
+            [self.sendClientData(client, data) for client in self.clients if client["sendData"]]
+
+    def configureNewClients(self):
+        for client in self.clients:
+            if not client["sendData"]:
+                print(f"Enabled connection for client {client}")
+                client["sendData"] = True
 
     def sendClientData(self, client, data):
         if client["sendData"]:
-            client["sock"].sendall(data)
+            try:
+                client["sock"].sendall(data)
+            except ConnectionAbortedError:
+                client["sock"].close()
+                print(f"closed: {client}")
+                self.clients = [c for c in self.clients if c["sock"] != client["sock"]]
 
     def heloGenerator(self):
         while True:

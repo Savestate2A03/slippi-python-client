@@ -1,6 +1,7 @@
 import struct
 import time
 from enum import Enum
+from pubsub import pub
 
 class SlippiDataProcessor:
 
@@ -87,9 +88,10 @@ class SlippiDataProcessor:
             if (not gdp.active) and (not (self.CMD(command) == self.CMD.GAME_END)):
                 gdp.active = True
                 print("Game active")
-                OBSInteract.showSlippi()
             
             if command not in self.info["payloadSizes"]:
+                if command != 0x35:
+                    return # started in the middle of a match ??
                 payloadSize = 0
             else:
                 payloadSize = self.info["payloadSizes"][command]
@@ -115,6 +117,7 @@ class SlippiDataProcessor:
 
             # ugly ugly if elif elif elif etc
             if (self.CMD(command) == self.CMD.COMMANDS):
+                pub.sendMessage('Slippi-NewFile')
                 isNewGame = True
                 self.initNewGame()
                 payloadLen = self.processRecvCommands(dataNoCommand)
