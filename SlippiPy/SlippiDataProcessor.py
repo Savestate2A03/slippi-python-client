@@ -87,7 +87,7 @@ class SlippiDataProcessor:
 
             if (not gdp.active) and (not (self.CMD(command) == self.CMD.GAME_END)):
                 gdp.active = True
-                print("Game active")
+                pub.sendMessage('Slippi-GameActive')
             
             if command not in self.info["payloadSizes"]:
                 if command != 0x35:
