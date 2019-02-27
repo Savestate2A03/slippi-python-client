@@ -36,5 +36,5 @@ while True:
         for line in config:
             name, var = line.partition("=")[::2]
             clients[name.strip()] = var.strip()
-    for client in clients.keys():
+    for client in clients:
         pub.sendMessage('Slippi-AttachClientToWii', name=client, wiiname=clients[client])

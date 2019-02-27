@@ -50,7 +50,7 @@ class SlippiClient:
         _thread.start_new_thread(self.heloZoneThread,())
 
     def addNewWii(self, wiiname, ip, port=666):
-        if wiiname not in self.wiis.keys():
+        if wiiname not in self.wiis:
             # set up a wii for recieving data
             _thread.start_new_thread(self.wiiConnectThread,(wiiname, ip, port))
         else:
