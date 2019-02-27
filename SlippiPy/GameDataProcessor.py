@@ -2,9 +2,10 @@ import struct
 from pubsub import pub
 
 class GameDataProcessor:
-    def __init__(self):
+    def __init__(self, wiiname):
         self.ready = False
         self.active = False
+        self.wiiname = wiiname
         self.info = {}
 
     def newGame(self):

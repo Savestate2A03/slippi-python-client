@@ -5,8 +5,9 @@ from pubsub import pub
 
 class SlippiDataProcessor:
 
-    def __init__(self):
+    def __init__(self, wiiname):
         self.info = self.getNewInfo()
+        self.wiiname = wiiname
         self.ramfile = b''
 
     class CMD(Enum):
@@ -87,7 +88,7 @@ class SlippiDataProcessor:
 
             if (not gdp.active) and (not (self.CMD(command) == self.CMD.GAME_END)):
                 gdp.active = True
-                pub.sendMessage('Slippi-GameActive')
+                pub.sendMessage('Slippi-GameActive', wiiname=self.wiiname)
             
             if command not in self.info["payloadSizes"]:
                 if command != 0x35:
@@ -117,7 +118,8 @@ class SlippiDataProcessor:
 
             # ugly ugly if elif elif elif etc
             if (self.CMD(command) == self.CMD.COMMANDS):
-                pub.sendMessage('Slippi-NewFile')
+                pub.sendMessage('Slippi-MatchStatus', status=True, wiiname=self.wiiname)
+                pub.sendMessage('Slippi-NewFile', wiiname=self.wiiname)
                 isNewGame = True
                 self.initNewGame()
                 payloadLen = self.processRecvCommands(dataNoCommand)
@@ -128,6 +130,7 @@ class SlippiDataProcessor:
                 self.endGame()
                 gdp.gameEndProcess(payloadPtrWithCommand)
                 isGameEnd = True
+                pub.sendMessage('Slippi-MatchStatus', status=False, wiiname=self.wiiname)
             elif (self.CMD(command) == self.CMD.GAME_START):
                 payloadLen = self.processCommand(command, dataNoCommand)
                 self.writeCommand(command, payloadPtr, payloadLen)
