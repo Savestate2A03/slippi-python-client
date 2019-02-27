@@ -109,6 +109,7 @@ class SlippiClient:
 
         # send all connected clients a game end message if needed,
         # then mark as not ready for data
+
         with self.clientLock:
             for client in self.clientsFromWiiName(wiiname):
                 if client["midgame"]:
@@ -198,7 +199,7 @@ class SlippiClient:
     def sendClientDataAndCheck(self, client, data):
         try:
             client["sock"].sendall(data)
-        except ConnectionAbortedError:
+        except (ConnectionAbortedError, ConnectionResetError):
             # if client ran off, remove them from the list
             client["sock"].close()
             print(f'Closed client "{client["name"]}"')
