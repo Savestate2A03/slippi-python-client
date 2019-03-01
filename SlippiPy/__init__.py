@@ -1,2 +1,2 @@
-from . import SlippiClient
+from .SlippiClient import SlippiClient
 __all__ = ["SlippiClient"]
