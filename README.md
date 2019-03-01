@@ -8,3 +8,4 @@ todo:
  * do cool things 
  * ~~turn it into a package or whatever you're supposed to do with python projects~~ (structure-wise at least is done)
  * autodetect disconnected wii and remove it from wii list
+ * sign in feature that involves sending randomly gen'd stage + character to a wii to claim it
