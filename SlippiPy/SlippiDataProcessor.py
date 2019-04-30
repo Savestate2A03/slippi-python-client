@@ -1,3 +1,4 @@
+
 import struct
 import time
 from enum import Enum
@@ -88,7 +89,8 @@ class SlippiDataProcessor:
 
             if (not gdp.active) and (not (self.CMD(command) == self.CMD.GAME_END)):
                 gdp.active = True
-                pub.sendMessage('Slippi-GameActive', wiiname=self.wiiname)
+                if ((self.CMD(command) != self.CMD.GAME_START) and (self.CMD(command) != self.CMD.COMMANDS)):
+                    pub.sendMessage('Slippi-GameActive', wiiname=self.wiiname)
             
             if command not in self.info["payloadSizes"]:
                 if command != 0x35:

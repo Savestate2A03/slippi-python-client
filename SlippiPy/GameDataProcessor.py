@@ -118,7 +118,8 @@ class GameDataProcessor:
     def postFrameProcess(self, data):
         chars = self.info["chars"] if (data[0x06] == 0) else self.info["followers"]
         playerIndex = data[0x05]
-        player = chars[playerIndex] 
+        player = chars[playerIndex]
+        old = player.copy()
         player["isFollower"] = True if (data[0x06] == 1) else False
         player["internalCharId"] = data[0x7]
         player["actionStateID"] = struct.unpack('>H', data[0x8:0x8+2])[0]
@@ -132,7 +133,15 @@ class GameDataProcessor:
         player["lastHitBy"] = data[0x20]
         player["stocks"] = data[0x21]
         player["actionStateFrameCounter"] = struct.unpack('>f', data[0x22:0x22+4])[0]
-        self.ready = True # ok NOW you can get data
+        if not self.ready:
+            self.ready = True # ok NOW you can get data
+            return
+        if player["percent"] != old["percent"]:
+            pub.sendMessage('Slippi-PercentChange',
+                player=playerIndex,
+                isFollower=player["isFollower"],
+                oldPercent=old["percent"],
+                newPercent=player["percent"])
 
     def gameEndProcess(self, data):
         g = self.info["gameData"]

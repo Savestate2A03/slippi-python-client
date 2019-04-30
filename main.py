@@ -1,6 +1,12 @@
+
 import time 
 from pubsub import pub
 from SlippiPy import SlippiClient
+import obswebsocket, obswebsocket.requests
+
+obs = obswebsocket.obsws("localhost", 4444)
+obs.connect()
+obsItem = "obs websocket test item"
 
 # note: Slippi-PercentChange isn't being published to yet
 def onPercentChange(player, isFollower, oldPercent, newPercent):
@@ -8,9 +14,11 @@ def onPercentChange(player, isFollower, oldPercent, newPercent):
 
 def onGameInactive(wiiname):
     print(f"{wiiname}: Game Inactive")
-
+    obs.call(obswebsocket.requests.SetSourceFilterSettings(obsItem, "Color Correction", {'opacity': 0}))
+obsItem
 def onGameActive(wiiname):
     print(f"{wiiname}: Game Active")
+    obs.call(obswebsocket.requests.SetSourceFilterSettings(obsItem, "Color Correction", {'opacity': 100}))
 
 def onMatchStatus(wiiname, status):
     print(f"{wiiname}: Match Status is {status}")
@@ -23,18 +31,8 @@ pub.subscribe(onMatchStatus, 'Slippi-MatchStatus')
 
 # connect to wii and start relay server
 slippi = SlippiClient.SlippiClient()
-slippi.addNewWii("leftWii", "10.5.0.16")
-slippi.addNewWii("rightWii", "10.5.0.18")
+slippi.addNewWii("wii", "localhost", port=671)
 
-# the config read stuff is only temp
-# when fully implemented, it'd be controlled
-# by a UI of sorts, prob thru django
-while True:
+while True: 
     time.sleep(0.5)
-    clients = {}
-    with open("config.txt") as config:
-        for line in config:
-            name, var = line.partition("=")[::2]
-            clients[name.strip()] = var.strip()
-    for client in clients:
-        pub.sendMessage('Slippi-AttachClientToWii', name=client, wiiname=clients[client])
+    pass

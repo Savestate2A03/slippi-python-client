@@ -1,3 +1,0 @@
-client0=leftWii
-client1=rightWii
-client2=rightWii
