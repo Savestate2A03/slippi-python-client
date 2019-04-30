@@ -30,7 +30,7 @@ pub.subscribe(onGameActive, 'Slippi-GameActive')
 pub.subscribe(onMatchStatus, 'Slippi-MatchStatus')
 
 # connect to wii and start relay server
-slippi = SlippiClient.SlippiClient()
+slippi = SlippiClient()
 slippi.addNewWii("wii", "localhost", port=671)
 
 while True: 
